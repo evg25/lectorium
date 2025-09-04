@@ -73,53 +73,55 @@ const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
 const state = { q:"", author:"", topic:"", tags:[] };
 
+// утилиты
+const norm = s => (s ?? "").toString().trim().toLowerCase();
 function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
-function populateFilters(){
-  const authors = uniqueSorted(lectures.map(x=>x.author));
-  const topics  = uniqueSorted(lectures.map(x=>x.topic));
-  const tags    = uniqueSorted(lectures.flatMap(x=>x.tags||[]));
-
-  const fill = (sel, list, withEmpty=false, emptyText="—")=>{
-    const el = $(sel);
-    el.innerHTML = "";
-    if(withEmpty){
-      const o0 = document.createElement('option'); o0.value=""; o0.textContent=emptyText; el.appendChild(o0);
-    }
-    list.forEach(v=>{
-      const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o);
-    });
-  };
-
-  fill('#author', authors, true, 'Все авторы');
-  fill('#topic',  topics,  true, 'Все темы');
-  // для multiple пустой элемент не добавляем
-  fill('#tag',    tags,    false);
-}
-
-function match(item){
-  const q = state.q.trim().toLowerCase();
+// фильтр без учёта тегов — нужен, чтобы пересчитать доступные теги
+function baseMatch(item){
+  const q = norm(state.q);
   if(q){
-    const hay = [item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' ').toLowerCase();
+    const hay = norm([item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' '));
     if(!hay.includes(q)) return false;
   }
   if(state.author && item.author !== state.author) return false;
   if(state.topic  && item.topic  !== state.topic)  return false;
+  return true;
+}
+
+// конечное совпадение (включая теги)
+function match(item){
+  if(!baseMatch(item)) return false;
   if(state.tags.length){
-    // требуем, чтобы у лекции были все выбранные теги
-    const its = item.tags || [];
-    if(!state.tags.every(t => its.includes(t))) return false;
+    const its = (item.tags || []).map(norm);
+    const need = state.tags.map(norm);
+    // требуется, чтобы у лекции были ВСЕ выбранные теги
+    if(!need.every(t => its.includes(t))) return false;
   }
   return true;
 }
 
-function mailtoLink(item){
-  const to = "you@example.com"; // ← замени на свою почту
-  const subject = `Запрос доступа: ${item.title}`;
-  const body = `Здравствуйте! Хочу получить доступ к лекции "${item.title}" (ID: ${item.id}).\nОплату подтверждаю.\n\nМое имя: \nКонтакт: `;
-  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+// пересчёт доступных тегов под текущее подмножество (без учёта выбранных тегов)
+function recomputeAvailableTags(){
+  const subset = lectures.filter(baseMatch);
+  const tags = uniqueSorted(subset.flatMap(x => x.tags || []));
+  const tagSel = $('#tag');
+
+  // сохранить уже выбранные значения, которые ещё существуют
+  const prev = new Set(state.tags);
+  tagSel.innerHTML = "";
+  tags.forEach(v=>{
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    if(prev.has(v)) o.selected = true;
+    tagSel.appendChild(o);
+  });
+
+  // выброшенные (больше недоступные) теги убрать из state
+  state.tags = state.tags.filter(t => tags.includes(t));
 }
 
+// отрисовка карточек
 function cardHTML(item){
   const tags = (item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
   const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : "";
@@ -134,16 +136,33 @@ function cardHTML(item){
     </div>
     <div class="card-foot">
       <span class="status">${item.status || ''}</span>
-      <a class="button" href="${mailtoLink(item)}">Запросить доступ</a>
     </div>
   </article>`;
 }
 
 function render(){
+  // перед отрисовкой — пересчитать доступные теги под текущие q/author/topic
+  recomputeAvailableTags();
+
   const list = lectures.filter(match);
   $('#grid').innerHTML = list.length
     ? list.map(cardHTML).join('')
     : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
+}
+
+// заполнение авторов/тем (общие списки из всех лекций)
+function populateStaticFilters(){
+  const authors = uniqueSorted(lectures.map(x=>x.author));
+  const topics  = uniqueSorted(lectures.map(x=>x.topic));
+
+  const fill = (sel, list, placeholder)=>{
+    const el = $(sel);
+    el.innerHTML = "";
+    const o0 = document.createElement('option'); o0.value=""; o0.textContent=placeholder; el.appendChild(o0);
+    list.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+  };
+  fill('#author', authors, 'Все авторы');
+  fill('#topic',  topics,  'Все темы');
 }
 
 function bindUI(){
@@ -153,24 +172,34 @@ function bindUI(){
 
   // множественный выбор тегов
   $('#tag').addEventListener('change', e=>{
-    state.tags = Array.from(e.target.selectedOptions).map(o=>o.value);
+    state.tags = Array.from(e.target.selectedOptions).map(o=>o.value).filter(Boolean);
     render();
   });
 
   $('#reset').addEventListener('click', ()=>{
     state.q=""; state.author=""; state.topic=""; state.tags=[];
     $('#q').value=""; $('#author').value=""; $('#topic').value="";
-    Array.from($('#tag').options).forEach(o=>o.selected=false);
+    // теги пересчитаются и сбросятся внутри render()
     render();
   });
 
   $('#year').textContent = new Date().getFullYear();
 }
 
+// загрузка данных
 fetch('lectures.json', { cache: 'no-store' })
   .then(r=>r.json())
-  .then(data=>{ lectures = data.lectures || []; populateFilters(); bindUI(); render(); })
-  .catch(err=>{ console.error(err); $('#grid').innerHTML = `<div class="empty">Ошибка загрузки данных</div>`; });
+  .then(data=>{
+    lectures = data.lectures || [];
+    populateStaticFilters();
+    bindUI();
+    render();
+  })
+  .catch(err=>{
+    console.error(err);
+    $('#grid').innerHTML = `<div class="empty">Ошибка загрузки данных</div>`;
+  });
 </script>
+
 </body>
 </html>
