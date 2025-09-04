@@ -3,25 +3,29 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Архив видеолекций</title>
+  <title>Архив лектория Бабель.Иерусалим</title>
+  <meta name="description" content="Каталог видеолекций: поиск по авторам, темам и тегам" />
   <style>
     :root{
       --bg:#f8f9fa; --card:#ffffff; --muted:#6c757d; --text:#212529;
       --brand:#0d6efd; --chip:#e9ecef; --ring:#dee2e6;
-      --radius:14px; --shadow:0 4px 16px rgba(0,0,0,.08);
+      --radius:14px; --shadow:0 6px 18px rgba(0,0,0,.08);
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    a{color:inherit;text-decoration:none}
     .container{max-width:1200px;margin:0 auto;padding:24px}
     header{margin-bottom:18px}
     .h1{font-size:clamp(22px,3.5vw,34px);margin:0}
     .subtitle{color:var(--muted);margin-top:6px}
     .filters{display:grid;grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px;margin-top:16px}
+    @media (max-width:900px){ .filters{grid-template-columns:1fr 1fr; } }
     .input,.select,.button{
       background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)
     }
+    .select[multiple]{height:42px}
     .button{cursor:pointer;font-weight:600;background:var(--brand);color:#fff;border:none}
-    .button:hover{opacity:.9}
+    .button:hover{opacity:.92}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
     .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
     .thumb{aspect-ratio:16/9;background:#ddd}
@@ -33,7 +37,8 @@
     .desc{margin-top:8px;font-size:14px;line-height:1.4}
     .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
     .tag{background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
-    .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:space-between;align-items:center}
+    .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .status{color:var(--muted);font-size:12px}
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
     .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
   </style>
@@ -42,84 +47,130 @@
   <div class="container">
     <header>
       <h1 class="h1">Архив видеолекций</h1>
-      <div class="subtitle">Поиск по авторам, темам и тегам</div>
-      <div class="filters">
-        <input class="input" id="q" placeholder="Поиск…" />
-        <select class="select" id="author"><option value="">Все авторы</option></select>
-        <select class="select" id="topic"><option value="">Все темы</option></select>
-        <select class="select" id="tag"><option value="">Все теги</option></select>
-        <button class="button" id="reset">Сброс</button>
+      <div class="subtitle">Поиск по авторам, темам и тегам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
+
+      <div class="filters" role="region" aria-label="Фильтры">
+        <input class="input" id="q" placeholder="Поиск по названию/описанию…" />
+        <select class="select" id="author" aria-label="Автор">
+          <option value="">Все авторы</option>
+        </select>
+        <select class="select" id="topic" aria-label="Тема">
+          <option value="">Все темы</option>
+        </select>
+        <!-- множественный выбор тегов -->
+        <select class="select" id="tag" aria-label="Теги" multiple title="Выберите один или несколько тегов (Ctrl/Cmd для множественного выбора)"></select>
+        <button class="button" id="reset" type="button">Сброс</button>
       </div>
     </header>
 
-    <main class="grid" id="grid"></main>
-    <footer>© <span id="year"></span> • Каталог лекций</footer>
+    <main class="grid" id="grid" aria-live="polite"></main>
+
+    <footer>© <span id="year"></span> • Каталог лекций • Связь: <a href="mailto:you@example.com">you@example.com</a></footer>
   </div>
 
 <script>
 const $ = (s, r=document)=>r.querySelector(s);
-let lectures=[]; const state={q:"",author:"",topic:"",tag:""};
+let lectures = [];
+const state = { q:"", author:"", topic:"", tags:[] };
 
-function uniqueSorted(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));}
+function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
 function populateFilters(){
-  const authors=uniqueSorted(lectures.map(x=>x.author));
-  const topics=uniqueSorted(lectures.map(x=>x.topic));
-  const tags=uniqueSorted(lectures.flatMap(x=>x.tags||[]));
-  const fill=(sel,list)=>{const el=$(sel); list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});};
-  fill('#author',authors); fill('#topic',topics); fill('#tag',tags);
+  const authors = uniqueSorted(lectures.map(x=>x.author));
+  const topics  = uniqueSorted(lectures.map(x=>x.topic));
+  const tags    = uniqueSorted(lectures.flatMap(x=>x.tags||[]));
+
+  const fill = (sel, list, withEmpty=false, emptyText="—")=>{
+    const el = $(sel);
+    el.innerHTML = "";
+    if(withEmpty){
+      const o0 = document.createElement('option'); o0.value=""; o0.textContent=emptyText; el.appendChild(o0);
+    }
+    list.forEach(v=>{
+      const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o);
+    });
+  };
+
+  fill('#author', authors, true, 'Все авторы');
+  fill('#topic',  topics,  true, 'Все темы');
+  // для multiple пустой элемент не добавляем
+  fill('#tag',    tags,    false);
 }
 
 function match(item){
-  const q=state.q.toLowerCase();
+  const q = state.q.trim().toLowerCase();
   if(q){
-    const hay=[item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' ').toLowerCase();
+    const hay = [item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' ').toLowerCase();
     if(!hay.includes(q)) return false;
   }
-  if(state.author && item.author!==state.author) return false;
-  if(state.topic && item.topic!==state.topic) return false;
-  if(state.tag && !(item.tags||[]).includes(state.tag)) return false;
+  if(state.author && item.author !== state.author) return false;
+  if(state.topic  && item.topic  !== state.topic)  return false;
+  if(state.tags.length){
+    // требуем, чтобы у лекции были все выбранные теги
+    const its = item.tags || [];
+    if(!state.tags.every(t => its.includes(t))) return false;
+  }
   return true;
 }
 
+function mailtoLink(item){
+  const to = "you@example.com"; // ← замени на свою почту
+  const subject = `Запрос доступа: ${item.title}`;
+  const body = `Здравствуйте! Хочу получить доступ к лекции "${item.title}" (ID: ${item.id}).\nОплату подтверждаю.\n\nМое имя: \nКонтакт: `;
+  return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 function cardHTML(item){
-  const tags=(item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
-  const thumb=item.thumbnail?`<img src="${item.thumbnail}" alt="">`:"";
-  const mailto=`mailto:you@example.com?subject=${encodeURIComponent("Запрос доступа: "+item.title)}`;
-  return `<article class="card">
+  const tags = (item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+  const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : "";
+  return `<article class="card" tabindex="0" aria-label="${item.title}">
     <div class="thumb">${thumb}</div>
     <div class="content">
-      <div class="topic">${item.topic||''}</div>
+      <div class="topic">${item.topic || ''}</div>
       <div class="name">${item.title}</div>
-      <div class="author">Автор: ${item.author||''}</div>
-      <p class="desc">${item.description||''}</p>
+      <div class="author">Автор: ${item.author || ''}</div>
+      <p class="desc">${item.description || ''}</p>
       <div class="tags">${tags}</div>
     </div>
     <div class="card-foot">
-      <span>${item.status||''}</span>
-      <a class="button" href="${mailto}">Запросить</a>
+      <span class="status">${item.status || ''}</span>
+      <a class="button" href="${mailtoLink(item)}">Запросить доступ</a>
     </div>
   </article>`;
 }
 
 function render(){
-  const list=lectures.filter(match);
-  $('#grid').innerHTML=list.length?list.map(cardHTML).join(''):`<div class="empty">Ничего не найдено</div>`;
+  const list = lectures.filter(match);
+  $('#grid').innerHTML = list.length
+    ? list.map(cardHTML).join('')
+    : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
 }
 
 function bindUI(){
-  $('#q').addEventListener('input',e=>{state.q=e.target.value;render();});
-  $('#author').addEventListener('change',e=>{state.author=e.target.value;render();});
-  $('#topic').addEventListener('change',e=>{state.topic=e.target.value;render();});
-  $('#tag').addEventListener('change',e=>{state.tag=e.target.value;render();});
-  $('#reset').addEventListener('click',()=>{state.q=state.author=state.topic=state.tag="";['q','author','topic','tag'].forEach(id=>$('#'+id).value="");render();});
-  $('#year').textContent=new Date().getFullYear();
+  $('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
+  $('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
+  $('#topic').addEventListener('change',  e=>{ state.topic  = e.target.value; render(); });
+
+  // множественный выбор тегов
+  $('#tag').addEventListener('change', e=>{
+    state.tags = Array.from(e.target.selectedOptions).map(o=>o.value);
+    render();
+  });
+
+  $('#reset').addEventListener('click', ()=>{
+    state.q=""; state.author=""; state.topic=""; state.tags=[];
+    $('#q').value=""; $('#author').value=""; $('#topic').value="";
+    Array.from($('#tag').options).forEach(o=>o.selected=false);
+    render();
+  });
+
+  $('#year').textContent = new Date().getFullYear();
 }
 
-fetch('lectures.json')
+fetch('lectures.json', { cache: 'no-store' })
   .then(r=>r.json())
-  .then(data=>{lectures=data.lectures; populateFilters(); bindUI(); render();})
-  .catch(err=>{$('#grid').innerHTML=`<div class="empty">Ошибка загрузки данных</div>`; console.error(err);});
+  .then(data=>{ lectures = data.lectures || []; populateFilters(); bindUI(); render(); })
+  .catch(err=>{ console.error(err); $('#grid').innerHTML = `<div class="empty">Ошибка загрузки данных</div>`; });
 </script>
 </body>
 </html>
