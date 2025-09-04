@@ -4,211 +4,122 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Архив видеолекций</title>
-  <meta name="description" content="Каталог видеолекций: поиск по авторам, темам и тегам" />
   <style>
     :root{
-      --bg:#0f1115; --card:#161922; --muted:#8b90a2; --text:#e7e9f2;
-      --brand:#4f7cff; --chip:#23283a; --ring:#2a3150;
-      --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#f8f9fa; --card:#ffffff; --muted:#6c757d; --text:#212529;
+      --brand:#0d6efd; --chip:#e9ecef; --ring:#dee2e6;
+      --radius:14px; --shadow:0 4px 16px rgba(0,0,0,.08);
     }
     *{box-sizing:border-box}
-    html,body{margin:0;background:linear-gradient(180deg,#0f1115, #0d1220 60%, #0f1115);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
-    a{color:inherit;text-decoration:none}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
     .container{max-width:1200px;margin:0 auto;padding:24px}
-    header{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
-    .title{font-weight:700;letter-spacing:.2px}
-    .title .h1{font-size:clamp(22px,3.5vw,34px);line-height:1.15;margin:0}
-    .subtitle{color:var(--muted);font-size:14px;margin-top:6px}
-    .filters{display:grid;grid-template-columns:1.2fr repeat(3, minmax(160px,1fr)) 120px;gap:10px;width:100%}
-    .input, .select, .button{
-      background:var(--card);border:1px solid transparent;border-radius:12px;padding:12px 14px;color:var(--text);
-      outline:none;box-shadow:inset 0 0 0 1px var(--ring);transition:.2s
+    header{margin-bottom:18px}
+    .h1{font-size:clamp(22px,3.5vw,34px);margin:0}
+    .subtitle{color:var(--muted);margin-top:6px}
+    .filters{display:grid;grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px;margin-top:16px}
+    .input,.select,.button{
+      background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)
     }
-    .input:focus,.select:focus{box-shadow:0 0 0 3px rgba(79,124,255,.25), inset 0 0 0 1px var(--brand);border-color:var(--brand)}
-    .button{cursor:pointer;text-align:center;font-weight:600;background:linear-gradient(180deg,#4f7cff,#3e6af7);border:none}
-    .button:hover{filter:brightness(1.05)}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:18px}
-    .card{
-      grid-column:span 4; background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-      border:1px solid #23283a;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);position:relative
-    }
-    @media (max-width:1000px){ .card{grid-column:span 6} }
-    @media (max-width:640px){ .filters{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
-      .filters .search{grid-column:1/-1} .card{grid-column:span 12} }
-    .thumb{aspect-ratio:16/9;background:#0b0e17;display:flex;align-items:center;justify-content:center}
+    .button{cursor:pointer;font-weight:600;background:var(--brand);color:#fff;border:none}
+    .button:hover{opacity:.9}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .thumb{aspect-ratio:16/9;background:#ddd}
     .thumb img{width:100%;height:100%;object-fit:cover}
-    .content{padding:14px 14px 12px}
-    .topic{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-    .name{font-size:18px;font-weight:700;margin:4px 0 2px}
+    .content{padding:12px}
+    .topic{font-size:12px;color:var(--muted);text-transform:uppercase}
+    .name{font-size:18px;font-weight:600;margin:4px 0}
     .author{color:var(--muted);font-size:14px}
-    .desc{margin-top:8px;color:#cfd3e6;font-size:14px;line-height:1.4}
-    .tags{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px}
-    .tag{background:var(--chip);border:1px solid #2a3147;color:#cbd1ea;padding:5px 10px;border-radius:999px;font-size:12px}
-    .card-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:0 14px 14px}
-    .ghost{border:1px solid var(--ring);background:transparent}
-    .ghost:hover{background:rgba(79,124,255,.08);border-color:var(--brand)}
-    .muted{color:var(--muted);font-size:12px}
+    .desc{margin-top:8px;font-size:14px;line-height:1.4}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .tag{background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
+    .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:space-between;align-items:center}
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
-    .empty{padding:32px;border:1px dashed #30364e;border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
+    .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div>
-        <div class="title">
-          <h1 class="h1">Архив видеолекций</h1>
-        </div>
-        <div class="subtitle">Поиск по авторам, темам и тегам. Оплата отдельно, доступ выдаётся после подтверждения.</div>
-      </div>
-      <div style="flex:1 1 100%">
-        <div class="filters" id="filters">
-          <input class="input search" id="q" type="search" placeholder="Поиск по названию и описанию…" />
-          <select class="select" id="author"><option value="">Все авторы</option></select>
-          <select class="select" id="topic"><option value="">Все темы</option></select>
-          <select class="select" id="tag"><option value="">Все теги</option></select>
-          <button class="button" id="reset" title="Сбросить фильтры">Сброс</button>
-        </div>
+      <h1 class="h1">Архив видеолекций</h1>
+      <div class="subtitle">Поиск по авторам, темам и тегам</div>
+      <div class="filters">
+        <input class="input" id="q" placeholder="Поиск…" />
+        <select class="select" id="author"><option value="">Все авторы</option></select>
+        <select class="select" id="topic"><option value="">Все темы</option></select>
+        <select class="select" id="tag"><option value="">Все теги</option></select>
+        <button class="button" id="reset">Сброс</button>
       </div>
     </header>
 
-    <main class="grid" id="grid" aria-live="polite"></main>
-
-    <footer>
-      © <span id="year"></span> • Каталог лекций • Связь: <a href="mailto:you@example.com">you@example.com</a>
-    </footer>
+    <main class="grid" id="grid"></main>
+    <footer>© <span id="year"></span> • Каталог лекций</footer>
   </div>
 
-  <!-- 🔧 ДАННЫЕ. Меняй содержимое массива lectures ниже -->
-  <script id="lectures-data" type="application/json">
-  {
-    "lectures": [
-      {
-        "id": "lec-001",
-        "title": "Введение в современную экономику",
-        "author": "Иван Петров",
-        "topic": "Экономика",
-        "tags": ["macro", "основы"],
-        "description": "Быстрый обзор ключевых понятий и связей, полезный перед углублённым курсом.",
-        "thumbnail": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1200&auto=format&fit=crop",
-        "duration": "1:12",
-        "preview": "https://example.com/preview/lec-001", 
-        "status": "Доступ после оплаты"
-      },
-      {
-        "id": "lec-002",
-        "title": "Практическая статистика для исследований",
-        "author": "Елена Савич",
-        "topic": "Статистика",
-        "tags": ["probability", "инструменты"],
-        "description": "Разбираем вариативность, доверительные интервалы и гипотезы на простых примерах.",
-        "thumbnail": "https://images.unsplash.com/photo-1551281044-8b49e0db1b7b?q=80&w=1200&auto=format&fit=crop",
-        "duration": "2:05",
-        "preview": "",
-        "status": "Доступ после оплаты"
-      },
-      {
-        "id": "lec-003",
-        "title": "История архитектуры Праги",
-        "author": "Мирослав Дворжак",
-        "topic": "Культура",
-        "tags": ["Прага", "архитектура", "история"],
-        "description": "От романики до модерна: на что смотреть в городе и как читать фасады.",
-        "thumbnail": "https://images.unsplash.com/photo-1541844053589-346841d0b34a?q=80&w=1200&auto=format&fit=crop",
-        "duration": "0:58",
-        "preview": "",
-        "status": "Доступ после оплаты"
-      }
-    ]
+<script>
+const $ = (s, r=document)=>r.querySelector(s);
+let lectures=[]; const state={q:"",author:"",topic:"",tag:""};
+
+function uniqueSorted(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));}
+
+function populateFilters(){
+  const authors=uniqueSorted(lectures.map(x=>x.author));
+  const topics=uniqueSorted(lectures.map(x=>x.topic));
+  const tags=uniqueSorted(lectures.flatMap(x=>x.tags||[]));
+  const fill=(sel,list)=>{const el=$(sel); list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});};
+  fill('#author',authors); fill('#topic',topics); fill('#tag',tags);
+}
+
+function match(item){
+  const q=state.q.toLowerCase();
+  if(q){
+    const hay=[item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' ').toLowerCase();
+    if(!hay.includes(q)) return false;
   }
-  </script>
+  if(state.author && item.author!==state.author) return false;
+  if(state.topic && item.topic!==state.topic) return false;
+  if(state.tag && !(item.tags||[]).includes(state.tag)) return false;
+  return true;
+}
 
-  <script>
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+function cardHTML(item){
+  const tags=(item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+  const thumb=item.thumbnail?`<img src="${item.thumbnail}" alt="">`:"";
+  const mailto=`mailto:you@example.com?subject=${encodeURIComponent("Запрос доступа: "+item.title)}`;
+  return `<article class="card">
+    <div class="thumb">${thumb}</div>
+    <div class="content">
+      <div class="topic">${item.topic||''}</div>
+      <div class="name">${item.title}</div>
+      <div class="author">Автор: ${item.author||''}</div>
+      <p class="desc">${item.description||''}</p>
+      <div class="tags">${tags}</div>
+    </div>
+    <div class="card-foot">
+      <span>${item.status||''}</span>
+      <a class="button" href="${mailto}">Запросить</a>
+    </div>
+  </article>`;
+}
 
-    const state = { q:"", author:"", topic:"", tag:"" };
-    const data = JSON.parse($('#lectures-data').textContent).lectures;
+function render(){
+  const list=lectures.filter(match);
+  $('#grid').innerHTML=list.length?list.map(cardHTML).join(''):`<div class="empty">Ничего не найдено</div>`;
+}
 
-    const uniqueSorted = (arr) => [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
+function bindUI(){
+  $('#q').addEventListener('input',e=>{state.q=e.target.value;render();});
+  $('#author').addEventListener('change',e=>{state.author=e.target.value;render();});
+  $('#topic').addEventListener('change',e=>{state.topic=e.target.value;render();});
+  $('#tag').addEventListener('change',e=>{state.tag=e.target.value;render();});
+  $('#reset').addEventListener('click',()=>{state.q=state.author=state.topic=state.tag="";['q','author','topic','tag'].forEach(id=>$('#'+id).value="");render();});
+  $('#year').textContent=new Date().getFullYear();
+}
 
-    function populateFilters(){
-      const authors = uniqueSorted(data.map(x=>x.author));
-      const topics  = uniqueSorted(data.map(x=>x.topic));
-      const tags    = uniqueSorted(data.flatMap(x=>x.tags||[]));
-
-      const fill = (sel, list) => {
-        const el = $(sel);
-        list.forEach(v=>{
-          const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o);
-        });
-      };
-      fill('#author', authors);
-      fill('#topic', topics);
-      fill('#tag', tags);
-    }
-
-    function match(item){
-      const q = state.q.trim().toLowerCase();
-      if(q){
-        const hay = [item.title, item.description, item.author, item.topic, ...(item.tags||[])].join(' ').toLowerCase();
-        if(!hay.includes(q)) return false;
-      }
-      if(state.author && item.author!==state.author) return false;
-      if(state.topic  && item.topic !==state.topic) return false;
-      if(state.tag    && !(item.tags||[]).includes(state.tag)) return false;
-      return true;
-    }
-
-    function cardHTML(item){
-      const tags = (item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
-      const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="Обложка: ${item.title}">` : `<span>🎬</span>`;
-      const previewBtn = item.preview ? `<a class="button ghost" href="${item.preview}" target="_blank" rel="noopener">Превью</a>` : `<button class="button ghost" disabled title="Превью недоступно">Превью</button>`;
-      const mailto = `mailto:you@example.com?subject=${encodeURIComponent('Запрос доступа: '+item.title)}&body=${encodeURIComponent('Здравствуйте! Хочу получить доступ к лекции '+item.title+' (ID: '+item.id+').\n\nС уважением, ')}`;
-
-      return `
-      <article class="card" tabindex="0" aria-label="${item.title}">
-        <div class="thumb">${thumb}</div>
-        <div class="content">
-          <div class="topic">${item.topic || 'Без темы'}</div>
-          <div class="name">${item.title}</div>
-          <div class="author">Автор: ${item.author || '—'}</div>
-          <p class="desc">${item.description || ''}</p>
-          <div class="tags">${tags}</div>
-        </div>
-        <div class="card-foot">
-          ${previewBtn}
-          <div style="display:flex;gap:8px;align-items:center">
-            <a class="button" href="${mailto}">Запросить доступ</a>
-          </div>
-        </div>
-      </article>`;
-    }
-
-    function render(){
-      const list = data.filter(match);
-      const grid = $('#grid');
-      grid.innerHTML = list.length
-        ? list.map(cardHTML).join('')
-        : `<div class="empty">Ничего не найдено. Попробуйте изменить запрос или сбросить фильтры.</div>`;
-    }
-
-    function bindUI(){
-      $('#q').addEventListener('input', e=>{ state.q=e.target.value; render(); });
-      $('#author').addEventListener('change', e=>{ state.author=e.target.value; render(); });
-      $('#topic').addEventListener('change', e=>{ state.topic=e.target.value; render(); });
-      $('#tag').addEventListener('change', e=>{ state.tag=e.target.value; render(); });
-      $('#reset').addEventListener('click', ()=>{
-        state.q=state.author=state.topic=state.tag="";
-        $('#q').value=""; $('#author').value=""; $('#topic').value=""; $('#tag').value="";
-        render();
-      });
-      $('#year').textContent = new Date().getFullYear();
-    }
-
-    populateFilters();
-    bindUI();
-    render();
-  </script>
+fetch('lectures.json')
+  .then(r=>r.json())
+  .then(data=>{lectures=data.lectures; populateFilters(); bindUI(); render();})
+  .catch(err=>{$('#grid').innerHTML=`<div class="empty">Ошибка загрузки данных</div>`; console.error(err);});
+</script>
 </body>
 </html>
