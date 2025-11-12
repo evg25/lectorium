@@ -223,7 +223,7 @@ $('#paypalBtn').addEventListener('click', ()=>{
   const count = state.selected.size;
   if(!count){alert('Выберите хотя бы одну лекцию перед оплатой.');return;}
   const sum = count*50;
-  window.open(`https://www.paypal.com/paypalme/desafimager/${sum}ILS`, '_blank');
+  window.open(`https://www.paypal.com/paypalme/yanabukchin/${sum}ILS`, '_blank');
 });
 
 fetch('lectures.json',{cache:'no-store'})
