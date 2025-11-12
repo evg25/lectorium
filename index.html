@@ -185,13 +185,13 @@ function cardHTML(item){
   const thumb = item.thumbnail
     ? `<img src="${item.thumbnail}" alt="" loading="lazy" decoding="async">`
     : `<img src="https://picsum.photos/seed/${item.id}/400/225" alt="" loading="lazy" decoding="async">`;
+
   return `<article class="card" tabindex="0" aria-label="${item.title}">
     <div class="thumb">${thumb}</div>
     <div class="content">
       <div class="topic">${item.topic || ''}</div>
       <div class="name">${item.title}</div>
       <div class="author">Автор: ${item.author || ''}</div>
-      <p class="desc">${item.description || ''}</p>
     </div>
     <div class="card-foot">
       <span class="status">${item.status || ''}</span>
