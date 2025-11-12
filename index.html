@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-scale, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#ffffff">
   <title>Архив видеолекций</title>
   <meta name="description" content="Каталог видеолекций: поиск по авторам и темам" />
@@ -17,7 +17,7 @@
     a{color:inherit;text-decoration:none}
     .container{max-width:1200px;margin:0 auto;padding:16px 16px 24px}
 
-    header{position:sticky;top:0;z-index:10;background:var(--bg);padding-top:8px;padding-bottom:10px;border-bottom:1px solid var(--ring)}
+    header{position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 10px;border-bottom:1px solid var(--ring)}
     .h1{font-size:clamp(22px,3.5vw,34px);margin:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
     .subtitle{color:var(--muted);margin-top:6px}
 
@@ -35,14 +35,23 @@
     }
     .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s}
     .card:hover{transform:translateY(-3px)}
-    .thumb{aspect-ratio:16/9;background:#ddd}
-    .thumb img{width:100%;height:100%;object-fit:cover}
+    .thumb{
+      height:180px;                      /* фиксированная высота */
+      background:#ddd;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;border-bottom:1px solid var(--ring);
+    }
+    .thumb img{
+      width:100%;height:100%;
+      object-fit:cover;
+      transition:transform 0.3s ease;
+    }
+    .thumb:hover img{transform:scale(1.03)}
     .content{padding:12px}
     .topic{font-size:12px;color:var(--muted);text-transform:uppercase}
     .name{font-size:18px;font-weight:600;margin:4px 0}
     .author{color:var(--muted);font-size:14px;margin-top:4px}
     .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:center;align-items:center}
-    .status{color:var(--muted);font-size:12px}
     .card.selected{outline:3px solid #0070ba;outline-offset:-3px;box-shadow:0 0 10px rgba(0,112,186,0.4)}
 
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
@@ -64,14 +73,9 @@
     .pay-btn:hover{background:#ffcd39}
 
     /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);
-      display:none;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .modal-content{
-      background:#fff;max-width:640px;width:90%;border-radius:12px;
-      padding:24px;box-shadow:0 6px 24px rgba(0,0,0,.2);
-      overflow-y:auto;max-height:80vh;position:relative;animation:popIn .25s ease-out
-    }
+    .modal-content{background:#fff;max-width:640px;width:90%;border-radius:12px;padding:24px;box-shadow:0 6px 24px rgba(0,0,0,.2);overflow-y:auto;max-height:80vh;position:relative;animation:popIn .25s ease-out}
     @keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
     .close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:26px;cursor:pointer;color:#666}
     .modal-content h3{margin-top:0}
@@ -118,9 +122,7 @@
         Количество выбранных лекций: <span id="count">0</span> • Сумма: <span id="sum">0</span> ₪
       </div>
 
-      <button id="paypalBtn" class="button" style="background:#0070ba;">
-        💰 Оплатить через PayPal
-      </button>
+      <button id="paypalBtn" class="button" style="background:#0070ba;">💰 Оплатить через PayPal</button>
 
       <div class="payment-methods">
         <p>Также можно оплатить:</p>
@@ -152,23 +154,15 @@ let lectures = [];
 const state = { q:"", author:"", topic:"", selected:new Set() };
 
 function norm(s){ return (s||"").toLowerCase().trim(); }
+function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
-function uniqueSorted(arr){ 
-  return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); 
-}
-
-// карточка лекции
-function cardHTML(item) {
+function cardHTML(item){
   const selected = state.selected.has(item.id);
-  const imgSrc = item.thumbnail && item.thumbnail.trim() !== "" 
-    ? item.thumbnail 
-    : "images/default.jpg";
-
+  const imgSrc = item.thumbnail && item.thumbnail.trim() !== "" ? item.thumbnail : "images/default.jpg";
   return `
-    <article class="card" data-id="${item.id}">
+    <article class="card" data-id="${item.id}" onclick="openModal('${item.id}')">
       <div class="thumb">
-        <img src="${imgSrc}" alt="${item.title}" 
-             onerror="this.onerror=null;this.src='images/default.jpg';">
+        <img src="${imgSrc}" alt="${item.title}" onerror="this.onerror=null;this.src='images/default.jpg';">
       </div>
       <div class="content">
         <div class="topic">${item.topic || ''}</div>
@@ -176,14 +170,13 @@ function cardHTML(item) {
         <div class="author">Автор: ${item.author || ''}</div>
       </div>
       <div class="card-foot">
-        <button class="button" onclick="toggleSelect('${item.id}')">
+        <button class="button" onclick="event.stopPropagation();toggleSelect('${item.id}')">
           ${selected ? '✓ Выбрано' : 'Выбрать'}
         </button>
       </div>
     </article>`;
 }
 
-// отрисовка списка
 function render(){
   const q = norm(state.q);
   const filtered = lectures.filter(x=>{
@@ -196,31 +189,16 @@ function render(){
   updateCounter();
 }
 
-// выбор лекции
-function toggleSelect(id){
-  state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
-  render();
-}
+function toggleSelect(id){ state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id); render(); }
+function updateCounter(){ const count=state.selected.size,sum=count*50;$('#count').textContent=count;$('#sum').textContent=sum; }
 
-// счётчик выбранных
-function updateCounter(){
-  const count = state.selected.size;
-  const sum = count*50;
-  $('#count').textContent = count;
-  $('#sum').textContent = sum;
-}
-
-// заполнение фильтров
 function populateFilters(){
   const authors = uniqueSorted(lectures.map(x=>x.author));
   const topics = uniqueSorted(lectures.map(x=>x.topic));
-  const authorSel = $('#author');
-  const topicSel = $('#topic');
-  authorSel.innerHTML = '<option value="">Все авторы</option>' + authors.map(a=>`<option>${a}</option>`).join('');
-  topicSel.innerHTML = '<option value="">Все темы</option>' + topics.map(t=>`<option>${t}</option>`).join('');
+  $('#author').innerHTML = '<option value="">Все авторы</option>' + authors.map(a=>`<option>${a}</option>`).join('');
+  $('#topic').innerHTML = '<option value="">Все темы</option>' + topics.map(t=>`<option>${t}</option>`).join('');
 }
 
-// модальное окно
 function openModal(id){
   const item = lectures.find(x=>x.id===id);
   if(!item) return;
@@ -229,52 +207,31 @@ function openModal(id){
   $('#modal-topic').textContent = item.topic || '';
   $('#modal-desc').textContent = item.description || '';
   $('#modal').style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // блокируем прокрутку
+  document.body.style.overflow = 'hidden';
 }
 
-function closeModal(){
-  $('#modal').style.display = 'none';
-  document.body.style.overflow = '';
-}
+function closeModal(){ $('#modal').style.display='none'; document.body.style.overflow=''; }
+$('#modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeModal(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-// Закрытие кликом по фону или по Esc
-$('#modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
-});
-window.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
-
-// события UI
 $('#q').addEventListener('input', e=>{state.q=e.target.value;render();});
 $('#author').addEventListener('change', e=>{state.author=e.target.value;render();});
 $('#topic').addEventListener('change', e=>{state.topic=e.target.value;render();});
-$('#reset').addEventListener('click', ()=>{
-  state.q=""; state.author=""; state.topic=""; state.selected.clear();
-  $('#q').value=""; $('#author').value=""; $('#topic').value="";
-  render();
-});
+$('#reset').addEventListener('click', ()=>{state.q="";state.author="";state.topic="";state.selected.clear();$('#q').value="";$('#author').value="";$('#topic').value="";render();});
 
 $('#paypalBtn').addEventListener('click', ()=>{
   const count = state.selected.size;
-  if(!count) { alert('Выберите хотя бы одну лекцию перед оплатой.'); return; }
+  if(!count){alert('Выберите хотя бы одну лекцию перед оплатой.');return;}
   const sum = count*50;
-  const url = `https://www.paypal.com/paypalme/desafimager/${sum}ILS`;
-  window.open(url, '_blank');
+  window.open(`https://www.paypal.com/paypalme/desafimager/${sum}ILS`, '_blank');
 });
 
-// загрузка лекций
 fetch('lectures.json',{cache:'no-store'})
   .then(r=>r.json())
-  .then(data=>{
-    lectures = data.lectures || [];
-    populateFilters();
-    render();
-  })
-  .catch(()=>{ $('#grid').innerHTML='<div class="empty">Ошибка загрузки данных</div>'; });
+  .then(data=>{lectures=data.lectures||[];populateFilters();render();})
+  .catch(()=>{$('#grid').innerHTML='<div class="empty">Ошибка загрузки данных</div>';});
 
-$('#year').textContent = new Date().getFullYear();
+$('#year').textContent=new Date().getFullYear();
 </script>
-
 </body>
 </html>
