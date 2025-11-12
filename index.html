@@ -7,7 +7,7 @@
   <title>Архив видеолекций</title>
   <meta name="description" content="Каталог видеолекций: поиск по авторам и темам" />
   <style>
-    :root{
+    :root {
       --bg:#f8f9fa; --card:#ffffff; --muted:#6c757d; --text:#212529;
       --brand:#0d6efd; --chip:#e9ecef; --ring:#dee2e6;
       --radius:14px; --shadow:0 6px 18px rgba(0,0,0,.08);
@@ -20,17 +20,17 @@
     header{position:sticky;top:0;z-index:10;background:var(--bg);padding-top:8px;padding-bottom:10px;border-bottom:1px solid var(--ring)}
     .h1{font-size:clamp(22px,3.5vw,34px);margin:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
     .subtitle{color:var(--muted);margin-top:6px}
+
     .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
     @media (min-width:900px){
-      .filters{grid-template-columns:1.5fr repeat(2,1fr) 120px;gap:10px}
+      .filters{grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px}
     }
-
     .input,.select,.button{min-height:44px;font-size:16px;background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)}
     .button{cursor:pointer;font-weight:600;background:var(--brand);color:#fff;border:none}
     .button:hover{opacity:.92}
 
     .grid{
-      display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
       gap:14px;margin-top:18px
     }
     .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
@@ -91,7 +91,7 @@
       font-size: 15px;
     }
 
-    /* 🔹 Кнопка К оплате */
+    /* 🔹 Кнопки */
     .pay-btn {
       background:#ffc107;
       color:#000;
@@ -102,8 +102,30 @@
       cursor:pointer;
       box-shadow:0 3px 8px rgba(0,0,0,.15);
     }
-    .pay-btn:hover {
-      background:#ffcd39;
+    .pay-btn:hover { background:#ffcd39; }
+
+    .bit-btn {
+      background:#00c853;
+      color:#fff;
+      border:none;
+      border-radius:10px;
+      padding:10px 18px;
+      font-weight:600;
+      cursor:pointer;
+      margin-top:10px;
+      box-shadow:0 3px 8px rgba(0,0,0,.15);
+    }
+    .bit-btn:hover { background:#00e676; }
+
+    .selected-counter {
+      font-size:14px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+
+    @media (max-width:600px){
+      .h1{flex-direction:column;align-items:flex-start}
+      .filters{grid-template-columns:1fr;gap:10px}
     }
   </style>
 </head>
@@ -112,21 +134,19 @@
     <header>
       <h1 class="h1">
         Архив видеолекций
-        <button class="pay-btn" onclick="document.getElementById('payment').scrollIntoView({behavior:'smooth'})">
-          💳 К оплате
-        </button>
+        <button class="pay-btn" onclick="document.getElementById('payment').scrollIntoView({behavior:'smooth'})">💳 К оплате</button>
       </h1>
       <div class="subtitle">Поиск по авторам и темам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
 
-      <div class="filters">
-        <input class="input" id="q" placeholder="Поиск по названию…" />
+      <div class="filters" role="region" aria-label="Фильтры">
+        <input class="input" id="q" placeholder="Поиск по названию или автору…" />
         <select class="select" id="author">
           <option value="">Все авторы</option>
         </select>
         <select class="select" id="topic">
           <option value="">Все темы</option>
         </select>
-        <button class="button" id="reset">Сброс</button>
+        <button class="button" id="reset" type="button">Сброс</button>
       </div>
     </header>
 
@@ -135,21 +155,22 @@
     <section class="contact-box" id="payment">
       <h2>💬 Связь и оплата</h2>
 
-      <p>Выбирайте темы, которые вас интересуют, и пишите мне в <strong>WhatsApp</strong>:
-        <a href="https://wa.me/972542067957" target="_blank">054&nbsp;206&nbsp;7957 (Яна)</a>.
+      <p>Выбирайте лекции, которые вам интересны, и пишите мне в <strong>WhatsApp</strong>:
+        <a href="https://wa.me/972543967957" target="_blank">054&nbsp;396&nbsp;7957 (Яна)</a>.
       </p>
 
       <p class="donate-line"><strong>🎁 Донат за лекцию — 50 шекелей.</strong><br>
       Если вам трудно — можете задонатить меньше, а если можете больше — мы будем особенно благодарны ❤️</p>
 
+      <div class="selected-counter" id="counter">Выбрано 0 лекций • Сумма: 0 ₪</div>
+
+      <button class="bit-btn" id="bitPay">Оплатить через Bit 💚</button>
+
       <div class="payment-methods">
-        <p>Платить можно разными способами:</p>
+        <p>Также можно оплатить:</p>
         <ul>
-          <li>🏦 <strong>Счёт в Леуми</strong><br>
-            ФИО: בוקצ'ין יאנה<br>
-            Банк: לאומי • Сниф: 903 • Счёт: 03829651
-          </li>
-          <li>💸 <strong>Bit / PayBox:</strong> <a href="tel:0542067957">054&nbsp;206&nbsp;7957</a></li>
+          <li>🏦 <strong>Счёт в Леуми:</strong> בוקצ'ין יאנה • Банк: לאומי • Сниф: 903 • Счёт: 03829651</li>
+          <li>💸 <strong>Bit / PayBox:</strong> <a href="tel:0542067957">054 206 7957</a></li>
           <li>💻 <strong>PayPal:</strong> <a href="mailto:desafimager@hotmail.com">desafimager@hotmail.com</a></li>
         </ul>
       </div>
@@ -161,68 +182,65 @@
 <script>
 const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
-const state = { q:"", author:"", topic:"" };
+const state = { q:"", author:"", topic:"", selected:new Set() };
 
-function norm(s){ return (s ?? "").toString().trim().toLowerCase(); }
-
-function baseMatch(item){
-  const q = norm(state.q);
-  if(q){
-    const hay = norm([item.title,item.description,item.author,item.topic].join(' '));
-    if(!hay.includes(q)) return false;
-  }
-  if(state.author && item.author !== state.author) return false;
-  if(state.topic  && item.topic  !== state.topic)  return false;
-  return true;
-}
+function norm(s){ return (s||"").toLowerCase().trim(); }
 
 function cardHTML(item){
-  const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : "";
-  return `<article class="card">
-    <div class="thumb">${thumb}</div>
+  const selected = state.selected.has(item.id);
+  return `<article class="card" data-id="${item.id}">
+    <div class="thumb">${item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : ""}</div>
     <div class="content">
       <div class="topic">${item.topic || ''}</div>
       <div class="name">${item.title}</div>
       <div class="author">Автор: ${item.author || ''}</div>
     </div>
-    <div class="card-foot"><span class="status">${item.status || ''}</span></div>
+    <div class="card-foot">
+      <button class="button" onclick="toggleSelect('${item.id}')">${selected?'✓ Выбрано':'Выбрать'}</button>
+    </div>
   </article>`;
 }
 
 function render(){
-  const list = lectures.filter(baseMatch);
-  $('#grid').innerHTML = list.length
-    ? list.map(cardHTML).join('')
-    : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
+  const q = norm(state.q);
+  const filtered = lectures.filter(x=>{
+    if(state.author && x.author!==state.author) return false;
+    if(state.topic && x.topic!==state.topic) return false;
+    if(q && !(`${x.title} ${x.author}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  $('#grid').innerHTML = filtered.map(cardHTML).join('') || `<div class="empty">Ничего не найдено</div>`;
+  updateCounter();
 }
 
-function populateFilters(){
-  const authors = [...new Set(lectures.map(x=>x.author).filter(Boolean))].sort();
-  const topics  = [...new Set(lectures.map(x=>x.topic).filter(Boolean))].sort();
-  const aSel = $('#author'), tSel = $('#topic');
-  aSel.innerHTML = '<option value="">Все авторы</option>' + authors.map(a=>`<option>${a}</option>`).join('');
-  tSel.innerHTML = '<option value="">Все темы</option>' + topics.map(t=>`<option>${t}</option>`).join('');
-}
-
-$('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
-$('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
-$('#topic').addEventListener('change', e=>{ state.topic = e.target.value; render(); });
-$('#reset').addEventListener('click', ()=>{
-  state.q=""; state.author=""; state.topic="";
-  $('#q').value=""; $('#author').value=""; $('#topic').value="";
+function toggleSelect(id){
+  state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
   render();
+}
+
+function updateCounter(){
+  const count = state.selected.size;
+  const sum = count*50;
+  $('#counter').textContent = `Выбрано ${count} лекций • Сумма: ${sum} ₪`;
+}
+
+$('#q').addEventListener('input', e=>{state.q=e.target.value;render();});
+$('#author').addEventListener('change', e=>{state.author=e.target.value;render();});
+$('#topic').addEventListener('change', e=>{state.topic=e.target.value;render();});
+$('#reset').addEventListener('click', ()=>{state.q="";state.author="";state.topic="";state.selected.clear();$('#q').value="";render();});
+
+$('#bitPay').addEventListener('click', ()=>{
+  const count = state.selected.size;
+  const sum = count*50 || 50;
+  alert(`Для оплаты ${sum} ₪ через Bit используйте номер 0542067957 или отсканируйте QR-код.`);
+  // Здесь можно добавить реальный вызов Bit API или генерацию QR
 });
 
-fetch('lectures.json', { cache: 'no-store' })
+fetch('lectures.json',{cache:'no-store'})
   .then(r=>r.json())
   .then(data=>{
     lectures = data.lectures || [];
-    populateFilters();
     render();
-  })
-  .catch(err=>{
-    console.error(err);
-    $('#grid').innerHTML = `<div class="empty">Ошибка загрузки данных</div>`;
   });
 
 $('#year').textContent = new Date().getFullYear();
