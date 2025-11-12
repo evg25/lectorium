@@ -18,11 +18,11 @@
     .container{max-width:1200px;margin:0 auto;padding:16px 16px 24px}
 
     header{position:sticky;top:0;z-index:10;background:var(--bg);padding-top:8px;padding-bottom:10px;border-bottom:1px solid var(--ring)}
-    .h1{font-size:clamp(22px,3.5vw,34px);margin:0}
+    .h1{font-size:clamp(22px,3.5vw,34px);margin:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
     .subtitle{color:var(--muted);margin-top:6px}
-    .filters{display:grid;grid-template-columns:1fr 1fr 1fr 120px;gap:10px;margin-top:10px}
-    @media (max-width:700px){
-      .filters{grid-template-columns:1fr 1fr;gap:8px}
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    @media (min-width:900px){
+      .filters{grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px}
     }
 
     .input,.select,.button{min-height:44px;font-size:16px;background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)}
@@ -39,7 +39,7 @@
     .content{padding:12px}
     .topic{font-size:12px;color:var(--muted);text-transform:uppercase}
     .name{font-size:18px;font-weight:600;margin:4px 0}
-    .author{color:var(--muted);font-size:14px}
+    .author{color:var(--muted);font-size:14px;margin-top:4px}
     .desc{margin-top:8px;font-size:14px;line-height:1.45}
     .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
     .status{color:var(--muted);font-size:12px}
@@ -47,122 +47,102 @@
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
     .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
 
-    /* Кнопка "К оплате" */
-    .pay-button{
-      position:sticky;
-      top:0;
-      margin-top:10px;
-      margin-bottom:10px;
-      display:block;
-      width:fit-content;
-      margin-left:auto;
-      background:var(--brand);
-      color:#fff;
-      border:none;
-      border-radius:999px;
-      padding:10px 22px;
-      font-size:16px;
-      font-weight:600;
-      cursor:pointer;
-      box-shadow:var(--shadow);
-      transition:background .2s,transform .15s;
-      z-index:20;
-    }
-    .pay-button:hover{background:#0b5ed7;transform:translateY(-1px)}
-    @media(max-width:700px){
-      .pay-button{
-        position:fixed;
-        bottom:20px;
-        right:20px;
-        margin:0;
-        padding:14px 22px;
-        font-size:17px;
-        box-shadow:0 4px 20px rgba(0,0,0,.25);
-      }
-    }
-
-    /* Блок контактов и оплаты */
+    /* 💬 Связь и оплата */
     .contact-box {
-      background: var(--card);
-      border: 1px solid var(--ring);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      margin-top: 40px;
-      font-size: 15px;
-      line-height: 1.55;
+      background: #fff9e6;
+      border: 1px solid #f5e2a8;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 40px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .contact-box h2 {
       margin-top: 0;
-      font-size: 20px;
-      color: var(--brand);
+      font-size: 22px;
+      color: #8b6508;
     }
-    .contact-box ul {
-      list-style: none;
-      padding-left: 0;
-      margin: 10px 0 0;
-    }
-    .contact-box li {
-      margin-bottom: 10px;
-      background: var(--bg);
-      padding: 8px 12px;
-      border-radius: 8px;
-      border-left: 4px solid var(--brand);
+    .contact-box p {
+      margin: 10px 0;
+      line-height: 1.5;
     }
     .contact-box a {
-      color: var(--brand);
+      color: #0d6efd;
+      font-weight: 500;
       text-decoration: none;
     }
     .contact-box a:hover {
       text-decoration: underline;
+    }
+    .donate-line {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 15px;
+    }
+    .payment-methods ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 10px 0 0;
+    }
+    .payment-methods li {
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    /* 🔹 Кнопка К оплате */
+    .pay-btn {
+      background:#ffc107;
+      color:#000;
+      border:none;
+      border-radius:10px;
+      font-weight:600;
+      padding:10px 18px;
+      cursor:pointer;
+      box-shadow:0 3px 8px rgba(0,0,0,.15);
+    }
+    .pay-btn:hover {
+      background:#ffcd39;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1 class="h1">Архив видеолекций</h1>
+      <h1 class="h1">
+        Архив видеолекций
+        <button class="pay-btn" onclick="document.getElementById('payment').scrollIntoView({behavior:'smooth'})">
+          💳 К оплате
+        </button>
+      </h1>
       <div class="subtitle">Поиск по авторам и темам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
-
-      <div class="filters" role="region" aria-label="Фильтры">
-        <input class="input" id="q" placeholder="Поиск по названию/описанию…" />
-        <select class="select" id="author" aria-label="Автор">
-          <option value="">Все авторы</option>
-        </select>
-        <select class="select" id="topic" aria-label="Тема">
-          <option value="">Все темы</option>
-        </select>
-        <button class="button" id="reset" type="button">Сброс</button>
-      </div>
     </header>
-
-    <button class="pay-button" onclick="scrollToPayment()">💳 К оплате</button>
 
     <main class="grid" id="grid" aria-live="polite"></main>
 
-    <section class="contact-box">
-  <h2>💬 Связь и оплата</h2>
+    <section class="contact-box" id="payment">
+      <h2>💬 Связь и оплата</h2>
 
-  <p>Выбирайте темы, которые вас интересуют, и пишите мне в <strong>WhatsApp</strong>:
-    <a href="https://wa.me/972543967957" target="_blank">054&nbsp;396&nbsp;7957 (Яна)</a>.
-  </p>
+      <p>Выбирайте темы, которые вас интересуют, и пишите мне в <strong>WhatsApp</strong>:
+        <a href="https://wa.me/972543967957" target="_blank">054&nbsp;396&nbsp;7957 (Яна)</a>.
+      </p>
 
-  <p class="donate-line"><strong>🎁 Донат за лекцию — 50 шекелей.</strong><br>
-  Если вам трудно — можете задонатить меньше, а если можете больше — мы будем особенно благодарны ❤️</p>
+      <p class="donate-line"><strong>🎁 Донат за лекцию — 50 шекелей.</strong><br>
+      Если вам трудно — можете задонатить меньше, а если можете больше — мы будем особенно благодарны ❤️</p>
 
-  <div class="payment-methods">
-    <p>Платить можно разными способами:</p>
-    <ul>
-      <li>🏦 <strong>Счёт в Леуми</strong><br>
-        ФИО: בוקצ'ין יאנה<br>
-        Банк: לאומי • Сниф: 903 • Счёт: 03829651
-      </li>
-      <li>💸 <strong>Bit / PayBox:</strong> <a href="tel:0542067957">054&nbsp;206&nbsp;7957</a></li>
-      <li>💻 <strong>PayPal:</strong> <a href="mailto:desafimager@hotmail.com">desafimager@hotmail.com</a></li>
-    </ul>
-  </div>
-</section>
-
+      <div class="payment-methods">
+        <p>Платить можно разными способами:</p>
+        <ul>
+          <li>🏦 <strong>Счёт в Леуми</strong><br>
+            ФИО: בוקצ'ין יאנה<br>
+            Банк: לאומי • Сниф: 903 • Счёт: 03829651
+          </li>
+          <li>💸 <strong>Bit / PayBox:</strong> <a href="tel:0542067957">054&nbsp;206&nbsp;7957</a></li>
+          <li>💻 <strong>PayPal:</strong> <a href="mailto:desafimager@hotmail.com">desafimager@hotmail.com</a></li>
+        </ul>
+      </div>
+    </section>
 
     <footer>© <span id="year"></span> • Каталог лекций</footer>
   </div>
@@ -170,89 +150,36 @@
 <script>
 const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
-const state = { q:"", author:"", topic:"" };
-
-const norm = s => (s ?? "").toString().trim().toLowerCase();
-function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
-
-function match(item){
-  const q = norm(state.q);
-  if(q){
-    const hay = norm([item.title,item.description,item.author,item.topic].join(' '));
-    if(!hay.includes(q)) return false;
-  }
-  if(state.author && item.author !== state.author) return false;
-  if(state.topic  && item.topic  !== state.topic)  return false;
-  return true;
-}
 
 function cardHTML(item){
-  const thumb = item.thumbnail
-    ? `<img src="${item.thumbnail}" alt="" loading="lazy" decoding="async">`
-    : `<img src="https://picsum.photos/seed/${item.id}/400/225" alt="" loading="lazy" decoding="async">`;
-
-  return `<article class="card" tabindex="0" aria-label="${item.title}">
+  const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : "";
+  return `<article class="card">
     <div class="thumb">${thumb}</div>
     <div class="content">
       <div class="topic">${item.topic || ''}</div>
       <div class="name">${item.title}</div>
       <div class="author">Автор: ${item.author || ''}</div>
     </div>
-    <div class="card-foot">
-      <span class="status">${item.status || ''}</span>
-    </div>
+    <div class="card-foot"><span class="status">${item.status || ''}</span></div>
   </article>`;
 }
 
 function render(){
-  const list = lectures.filter(match);
-  $('#grid').innerHTML = list.length
-    ? list.map(cardHTML).join('')
-    : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
-}
-
-function populateStaticFilters(){
-  const authors = uniqueSorted(lectures.map(x=>x.author));
-  const topics  = uniqueSorted(lectures.map(x=>x.topic));
-  const fill = (sel, list, placeholder)=>{
-    const el = $(sel);
-    el.innerHTML = "";
-    const o0 = document.createElement('option'); o0.value=""; o0.textContent=placeholder; el.appendChild(o0);
-    list.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
-  };
-  fill('#author', authors, 'Все авторы');
-  fill('#topic',  topics,  'Все темы');
-}
-
-function bindUI(){
-  $('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
-  $('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
-  $('#topic').addEventListener('change',  e=>{ state.topic  = e.target.value; render(); });
-  $('#reset').addEventListener('click', ()=>{
-    state.q=""; state.author=""; state.topic="";
-    $('#q').value=""; $('#author').value=""; $('#topic').value="";
-    render();
-  });
-  $('#year').textContent = new Date().getFullYear();
-}
-
-function scrollToPayment(){
-  const section = document.querySelector('.contact-box');
-  if(section){ section.scrollIntoView({behavior:'smooth',block:'start'}); }
+  $('#grid').innerHTML = lectures.map(cardHTML).join('');
 }
 
 fetch('lectures.json', { cache: 'no-store' })
   .then(r=>r.json())
   .then(data=>{
     lectures = data.lectures || [];
-    populateStaticFilters();
-    bindUI();
     render();
   })
   .catch(err=>{
     console.error(err);
     $('#grid').innerHTML = `<div class="empty">Ошибка загрузки данных</div>`;
   });
+
+$('#year').textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
