@@ -22,7 +22,7 @@
     .subtitle{color:var(--muted);margin-top:6px}
     .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
     @media (min-width:900px){
-      .filters{grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px}
+      .filters{grid-template-columns:1.5fr repeat(2,1fr) 120px;gap:10px}
     }
 
     .input,.select,.button{min-height:44px;font-size:16px;background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)}
@@ -117,6 +117,17 @@
         </button>
       </h1>
       <div class="subtitle">Поиск по авторам и темам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
+
+      <div class="filters">
+        <input class="input" id="q" placeholder="Поиск по названию…" />
+        <select class="select" id="author">
+          <option value="">Все авторы</option>
+        </select>
+        <select class="select" id="topic">
+          <option value="">Все темы</option>
+        </select>
+        <button class="button" id="reset">Сброс</button>
+      </div>
     </header>
 
     <main class="grid" id="grid" aria-live="polite"></main>
@@ -150,6 +161,20 @@
 <script>
 const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
+const state = { q:"", author:"", topic:"" };
+
+function norm(s){ return (s ?? "").toString().trim().toLowerCase(); }
+
+function baseMatch(item){
+  const q = norm(state.q);
+  if(q){
+    const hay = norm([item.title,item.description,item.author,item.topic].join(' '));
+    if(!hay.includes(q)) return false;
+  }
+  if(state.author && item.author !== state.author) return false;
+  if(state.topic  && item.topic  !== state.topic)  return false;
+  return true;
+}
 
 function cardHTML(item){
   const thumb = item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : "";
@@ -165,13 +190,34 @@ function cardHTML(item){
 }
 
 function render(){
-  $('#grid').innerHTML = lectures.map(cardHTML).join('');
+  const list = lectures.filter(baseMatch);
+  $('#grid').innerHTML = list.length
+    ? list.map(cardHTML).join('')
+    : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
 }
+
+function populateFilters(){
+  const authors = [...new Set(lectures.map(x=>x.author).filter(Boolean))].sort();
+  const topics  = [...new Set(lectures.map(x=>x.topic).filter(Boolean))].sort();
+  const aSel = $('#author'), tSel = $('#topic');
+  aSel.innerHTML = '<option value="">Все авторы</option>' + authors.map(a=>`<option>${a}</option>`).join('');
+  tSel.innerHTML = '<option value="">Все темы</option>' + topics.map(t=>`<option>${t}</option>`).join('');
+}
+
+$('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
+$('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
+$('#topic').addEventListener('change', e=>{ state.topic = e.target.value; render(); });
+$('#reset').addEventListener('click', ()=>{
+  state.q=""; state.author=""; state.topic="";
+  $('#q').value=""; $('#author').value=""; $('#topic').value="";
+  render();
+});
 
 fetch('lectures.json', { cache: 'no-store' })
   .then(r=>r.json())
   .then(data=>{
     lectures = data.lectures || [];
+    populateFilters();
     render();
   })
   .catch(err=>{
