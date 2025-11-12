@@ -153,6 +153,11 @@ const state = { q:"", author:"", topic:"", selected:new Set() };
 
 function norm(s){ return (s||"").toLowerCase().trim(); }
 
+function uniqueSorted(arr){ 
+  return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); 
+}
+
+// карточка лекции
 function cardHTML(item){
   const selected = state.selected.has(item.id);
   return `<article class="card ${selected?'selected':''}" data-id="${item.id}" onclick="openModal('${item.id}')">
@@ -168,6 +173,7 @@ function cardHTML(item){
   </article>`;
 }
 
+// отрисовка списка
 function render(){
   const q = norm(state.q);
   const filtered = lectures.filter(x=>{
@@ -180,11 +186,13 @@ function render(){
   updateCounter();
 }
 
+// выбор лекции
 function toggleSelect(id){
   state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
   render();
 }
 
+// счётчик выбранных
 function updateCounter(){
   const count = state.selected.size;
   const sum = count*50;
@@ -192,6 +200,17 @@ function updateCounter(){
   $('#sum').textContent = sum;
 }
 
+// заполнение фильтров
+function populateFilters(){
+  const authors = uniqueSorted(lectures.map(x=>x.author));
+  const topics = uniqueSorted(lectures.map(x=>x.topic));
+  const authorSel = $('#author');
+  const topicSel = $('#topic');
+  authorSel.innerHTML = '<option value="">Все авторы</option>' + authors.map(a=>`<option>${a}</option>`).join('');
+  topicSel.innerHTML = '<option value="">Все темы</option>' + topics.map(t=>`<option>${t}</option>`).join('');
+}
+
+// модальное окно
 function openModal(id){
   const item = lectures.find(x=>x.id===id);
   if(!item) return;
@@ -203,12 +222,14 @@ function openModal(id){
 }
 function closeModal(){ $('#modal').style.display='none'; }
 
+// события UI
 $('#q').addEventListener('input', e=>{state.q=e.target.value;render();});
 $('#author').addEventListener('change', e=>{state.author=e.target.value;render();});
 $('#topic').addEventListener('change', e=>{state.topic=e.target.value;render();});
 $('#reset').addEventListener('click', ()=>{
   state.q=""; state.author=""; state.topic=""; state.selected.clear();
-  $('#q').value=""; render();
+  $('#q').value=""; $('#author').value=""; $('#topic').value="";
+  render();
 });
 
 $('#paypalBtn').addEventListener('click', ()=>{
@@ -219,15 +240,18 @@ $('#paypalBtn').addEventListener('click', ()=>{
   window.open(url, '_blank');
 });
 
+// загрузка лекций
 fetch('lectures.json',{cache:'no-store'})
   .then(r=>r.json())
   .then(data=>{
     lectures = data.lectures || [];
+    populateFilters();
     render();
   })
   .catch(()=>{ $('#grid').innerHTML='<div class="empty">Ошибка загрузки данных</div>'; });
 
 $('#year').textContent = new Date().getFullYear();
 </script>
+
 </body>
 </html>
