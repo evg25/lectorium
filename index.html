@@ -46,6 +46,76 @@
 
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
     .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
+
+    /* Кнопка "К оплате" */
+    .pay-button{
+      position:sticky;
+      top:0;
+      margin-top:10px;
+      margin-bottom:10px;
+      display:block;
+      width:fit-content;
+      margin-left:auto;
+      background:var(--brand);
+      color:#fff;
+      border:none;
+      border-radius:999px;
+      padding:10px 22px;
+      font-size:16px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+      transition:background .2s,transform .15s;
+      z-index:20;
+    }
+    .pay-button:hover{background:#0b5ed7;transform:translateY(-1px)}
+    @media(max-width:700px){
+      .pay-button{
+        position:fixed;
+        bottom:20px;
+        right:20px;
+        margin:0;
+        padding:14px 22px;
+        font-size:17px;
+        box-shadow:0 4px 20px rgba(0,0,0,.25);
+      }
+    }
+
+    /* Блок контактов и оплаты */
+    .contact-box {
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-top: 40px;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .contact-box h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: var(--brand);
+    }
+    .contact-box ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 10px 0 0;
+    }
+    .contact-box li {
+      margin-bottom: 10px;
+      background: var(--bg);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border-left: 4px solid var(--brand);
+    }
+    .contact-box a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+    .contact-box a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -66,7 +136,28 @@
       </div>
     </header>
 
+    <button class="pay-button" onclick="scrollToPayment()">💳 К оплате</button>
+
     <main class="grid" id="grid" aria-live="polite"></main>
+
+    <section class="contact-box">
+      <h2>💬 Связь и оплата</h2>
+      <p>Выбирайте темы, которые вас интересуют, и пишите мне в <strong>WhatsApp</strong>:
+        <a href="https://wa.me/972543967957" target="_blank">054 396 7957 (Яна)</a>.
+      </p>
+
+      <div class="payment-methods">
+        <p>Платить можно разными способами:</p>
+        <ul>
+          <li>🏦 <strong>Счёт в Леуми</strong><br>
+            ФИО: בוקצ'ין יאנה<br>
+            Банк: לאומי   Сниф: 903   Счёт: 03829651
+          </li>
+          <li>💸 <strong>Bit / PayBox:</strong> <a href="tel:0542067957">054 206 7957</a></li>
+          <li>💻 <strong>PayPal:</strong> <a href="mailto:desafimager@hotmail.com">desafimager@hotmail.com</a></li>
+        </ul>
+      </div>
+    </section>
 
     <footer>© <span id="year"></span> • Каталог лекций</footer>
   </div>
@@ -76,11 +167,9 @@ const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
 const state = { q:"", author:"", topic:"" };
 
-// утилиты
 const norm = s => (s ?? "").toString().trim().toLowerCase();
 function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
-// фильтр
 function match(item){
   const q = norm(state.q);
   if(q){
@@ -92,11 +181,10 @@ function match(item){
   return true;
 }
 
-// карточка
 function cardHTML(item){
   const thumb = item.thumbnail
     ? `<img src="${item.thumbnail}" alt="" loading="lazy" decoding="async">`
-    : "";
+    : `<img src="https://picsum.photos/seed/${item.id}/400/225" alt="" loading="lazy" decoding="async">`;
   return `<article class="card" tabindex="0" aria-label="${item.title}">
     <div class="thumb">${thumb}</div>
     <div class="content">
@@ -111,7 +199,6 @@ function cardHTML(item){
   </article>`;
 }
 
-// отрисовка списка
 function render(){
   const list = lectures.filter(match);
   $('#grid').innerHTML = list.length
@@ -119,11 +206,9 @@ function render(){
     : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
 }
 
-// заполнение фильтров
 function populateStaticFilters(){
   const authors = uniqueSorted(lectures.map(x=>x.author));
   const topics  = uniqueSorted(lectures.map(x=>x.topic));
-
   const fill = (sel, list, placeholder)=>{
     const el = $(sel);
     el.innerHTML = "";
@@ -134,7 +219,6 @@ function populateStaticFilters(){
   fill('#topic',  topics,  'Все темы');
 }
 
-// биндинг событий
 function bindUI(){
   $('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
   $('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
@@ -147,7 +231,11 @@ function bindUI(){
   $('#year').textContent = new Date().getFullYear();
 }
 
-// загрузка данных
+function scrollToPayment(){
+  const section = document.querySelector('.contact-box');
+  if(section){ section.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+
 fetch('lectures.json', { cache: 'no-store' })
   .then(r=>r.json())
   .then(data=>{
