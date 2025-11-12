@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ffffff">
   <title>Архив видеолекций</title>
-  <meta name="description" content="Каталог видеолекций: поиск по авторам, темам и тегам" />
+  <meta name="description" content="Каталог видеолекций: поиск по авторам и темам" />
   <style>
     :root{
       --bg:#f8f9fa; --card:#ffffff; --muted:#6c757d; --text:#212529;
@@ -17,22 +17,18 @@
     a{color:inherit;text-decoration:none}
     .container{max-width:1200px;margin:0 auto;padding:16px 16px 24px}
 
-    /* Sticky header + мобильная сетка фильтров */
     header{position:sticky;top:0;z-index:10;background:var(--bg);padding-top:8px;padding-bottom:10px;border-bottom:1px solid var(--ring)}
     .h1{font-size:clamp(22px,3.5vw,34px);margin:0}
     .subtitle{color:var(--muted);margin-top:6px}
-    .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-    @media (min-width:900px){
-      .filters{grid-template-columns:1.5fr repeat(3,1fr) 120px;gap:10px}
+    .filters{display:grid;grid-template-columns:1fr 1fr 1fr 120px;gap:10px;margin-top:10px}
+    @media (max-width:700px){
+      .filters{grid-template-columns:1fr 1fr;gap:8px}
     }
 
-    /* Контролы под палец */
     .input,.select,.button{min-height:44px;font-size:16px;background:var(--card);border:1px solid var(--ring);border-radius:10px;padding:10px;color:var(--text)}
-    .select[multiple]{height:44px} /* высота на десктопе; на мобилке select скрыт */
     .button{cursor:pointer;font-weight:600;background:var(--brand);color:#fff;border:none}
     .button:hover{opacity:.92}
 
-    /* Сетка карточек */
     .grid{
       display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
       gap:14px;margin-top:18px
@@ -45,38 +41,18 @@
     .name{font-size:18px;font-weight:600;margin:4px 0}
     .author{color:var(--muted);font-size:14px}
     .desc{margin-top:8px;font-size:14px;line-height:1.45}
-    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-    .tag{background:var(--chip);padding:4px 8px;border-radius:999px;font-size:12px}
     .card-foot{margin-top:auto;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
     .status{color:var(--muted);font-size:12px}
 
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
     .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
-
-    /* Теги-чипы для мобилок */
-    #tag{display:none}                    /* селект тегов скрыт на мобилке */
-    .tag-chips{
-      display:flex;gap:8px;overflow:auto;padding:6px;background:var(--card);
-      border:1px solid var(--ring);border-radius:10px
-    }
-    .tag-chip{
-      flex:0 0 auto;padding:10px 12px;border-radius:999px;background:var(--chip);
-      border:1px solid var(--ring);font-size:14px;line-height:1;cursor:pointer;user-select:none
-    }
-    .tag-chip[aria-pressed="true"]{
-      border-color:var(--brand);box-shadow:0 0 0 2px rgba(13,110,253,.15) inset
-    }
-    @media (min-width:900px){
-      #tag{display:block}                 /* на десктопе показываем select */
-      .tag-chips{display:none}            /* чипы прячем */
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1 class="h1">Архив видеолекций</h1>
-      <div class="subtitle">Поиск по авторам, темам и тегам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
+      <div class="subtitle">Поиск по авторам и темам. Оплата отдельно — доступ выдаётся после подтверждения.</div>
 
       <div class="filters" role="region" aria-label="Фильтры">
         <input class="input" id="q" placeholder="Поиск по названию/описанию…" />
@@ -86,10 +62,6 @@
         <select class="select" id="topic" aria-label="Тема">
           <option value="">Все темы</option>
         </select>
-        <!-- Теги: десктоп — select multiple; мобилка — чипы ниже -->
-        <select class="select" id="tag" aria-label="Теги" multiple></select>
-        <div class="tag-chips" id="tagChips" aria-label="Теги (выберите несколько)"></div>
-
         <button class="button" id="reset" type="button">Сброс</button>
       </div>
     </header>
@@ -102,17 +74,17 @@
 <script>
 const $ = (s, r=document)=>r.querySelector(s);
 let lectures = [];
-const state = { q:"", author:"", topic:"", tags:[] };
+const state = { q:"", author:"", topic:"" };
 
 // утилиты
 const norm = s => (s ?? "").toString().trim().toLowerCase();
 function uniqueSorted(arr){ return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
-// фильтр без учёта тегов — чтобы пересчитать доступные теги
-function baseMatch(item){
+// фильтр
+function match(item){
   const q = norm(state.q);
   if(q){
-    const hay = norm([item.title,item.description,item.author,item.topic,(item.tags||[]).join(' ')].join(' '));
+    const hay = norm([item.title,item.description,item.author,item.topic].join(' '));
     if(!hay.includes(q)) return false;
   }
   if(state.author && item.author !== state.author) return false;
@@ -120,69 +92,8 @@ function baseMatch(item){
   return true;
 }
 
-// конечное совпадение (включая теги: требуем ВСЕ выбранные)
-function match(item){
-  if(!baseMatch(item)) return false;
-  if(state.tags.length){
-    const its = (item.tags || []).map(norm);
-    const need = state.tags.map(norm);
-    if(!need.every(t => its.includes(t))) return false;
-  }
-  return true;
-}
-
-// рендер чипов для мобилок
-function renderTagChips(availableTags){
-  const box = $('#tagChips');
-  if(!box) return;
-  const selected = new Set(state.tags);
-  box.innerHTML = availableTags.map(t=>{
-    const pressed = selected.has(t) ? 'true' : 'false';
-    return `<button type="button" class="tag-chip" data-tag="${t}" aria-pressed="${pressed}">${t}</button>`;
-  }).join('');
-
-  // обработчики
-  box.querySelectorAll('.tag-chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const t = btn.dataset.tag;
-      const on = btn.getAttribute('aria-pressed') === 'true';
-      if(on){ state.tags = state.tags.filter(x=>x!==t); }
-      else  { state.tags = [...new Set([...state.tags, t])]; }
-
-      // синхронизируем десктопный select
-      const tagSel = $('#tag');
-      Array.from(tagSel.options).forEach(o=>{ o.selected = state.tags.includes(o.value); });
-      render(); // пересчёт и перерисовка
-    });
-  });
-}
-
-// пересчёт доступных тегов для текущего поднабора (без учёта уже выбранных)
-function recomputeAvailableTags(){
-  const subset = lectures.filter(baseMatch);
-  const tags = uniqueSorted(subset.flatMap(x => x.tags || []));
-  const tagSel = $('#tag');
-
-  // сохранить выбранные, если они ещё есть
-  const prev = new Set(state.tags);
-  tagSel.innerHTML = "";
-  tags.forEach(v=>{
-    const o = document.createElement('option');
-    o.value = v; o.textContent = v;
-    if(prev.has(v)) o.selected = true;
-    tagSel.appendChild(o);
-  });
-
-  // выбросить из state те теги, которых больше нет
-  state.tags = state.tags.filter(t => tags.includes(t));
-
-  // обновить мобильные чипы
-  renderTagChips(tags);
-}
-
 // карточка
 function cardHTML(item){
-  const tags = (item.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
   const thumb = item.thumbnail
     ? `<img src="${item.thumbnail}" alt="" loading="lazy" decoding="async">`
     : "";
@@ -193,7 +104,6 @@ function cardHTML(item){
       <div class="name">${item.title}</div>
       <div class="author">Автор: ${item.author || ''}</div>
       <p class="desc">${item.description || ''}</p>
-      <div class="tags">${tags}</div>
     </div>
     <div class="card-foot">
       <span class="status">${item.status || ''}</span>
@@ -203,16 +113,13 @@ function cardHTML(item){
 
 // отрисовка списка
 function render(){
-  // перед отрисовкой пересчитать доступные теги (учитывая q/author/topic)
-  recomputeAvailableTags();
-
   const list = lectures.filter(match);
   $('#grid').innerHTML = list.length
     ? list.map(cardHTML).join('')
     : `<div class="empty">Ничего не найдено. Измените запрос или сбросьте фильтры.</div>`;
 }
 
-// заполнение авторов/тем
+// заполнение фильтров
 function populateStaticFilters(){
   const authors = uniqueSorted(lectures.map(x=>x.author));
   const topics  = uniqueSorted(lectures.map(x=>x.topic));
@@ -232,20 +139,11 @@ function bindUI(){
   $('#q').addEventListener('input', e=>{ state.q = e.target.value; render(); });
   $('#author').addEventListener('change', e=>{ state.author = e.target.value; render(); });
   $('#topic').addEventListener('change',  e=>{ state.topic  = e.target.value; render(); });
-
-  // десктопный множественный select тегов
-  $('#tag').addEventListener('change', e=>{
-    state.tags = Array.from(e.target.selectedOptions).map(o=>o.value).filter(Boolean);
-    render();
-  });
-
   $('#reset').addEventListener('click', ()=>{
-    state.q=""; state.author=""; state.topic=""; state.tags=[];
+    state.q=""; state.author=""; state.topic="";
     $('#q').value=""; $('#author').value=""; $('#topic').value="";
-    // теги пересчитаются и сбросятся внутри render()
     render();
   });
-
   $('#year').textContent = new Date().getFullYear();
 }
 
