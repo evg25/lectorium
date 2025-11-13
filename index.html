@@ -187,7 +187,11 @@ function render(){
   });
   $('#grid').innerHTML = filtered.map(cardHTML).join('') || `<div class="empty">Ничего не найдено</div>`;
   updateCounter();
+
+  // ✅ Прокрутка страницы вверх после фильтрации
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 
 function toggleSelect(id){ state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id); render(); }
 function updateCounter(){ const count=state.selected.size,sum=count*50;$('#count').textContent=count;$('#sum').textContent=sum; }
