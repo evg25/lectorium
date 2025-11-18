@@ -236,13 +236,13 @@ fetch('lectures.json',{cache:'no-store'})
 $('#year').textContent=new Date().getFullYear();
 
 // ✅ Счётчик посещений
-fetch('https://api.countapi.xyz/hit/evg25/lectorium-index')
+fetch('https://countapi.dev/update/evg25/lectorium-index?amount=1')
   .then(res => res.json())
   .then(data => {
     console.log("Visits:", data.value);
     $('#visits').textContent = 'Просмотров: ' + data.value;
   })
-  .catch(()=>console.log("Visit counter error"));
+  .catch(err => console.warn("Visit counter error", err));
 </script>
 </body>
 </html>
