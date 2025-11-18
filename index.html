@@ -36,7 +36,7 @@
     .card{background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s}
     .card:hover{transform:translateY(-3px)}
     .thumb{
-      height:180px;                      /* фиксированная высота */
+      height:180px;
       background:#ddd;
       display:flex;align-items:center;justify-content:center;
       overflow:hidden;border-bottom:1px solid var(--ring);
@@ -55,9 +55,10 @@
     .card.selected{outline:3px solid #0070ba;outline-offset:-3px;box-shadow:0 0 10px rgba(0,112,186,0.4)}
 
     footer{margin:28px 0 10px;color:var(--muted);font-size:12px;text-align:center}
+    #visits { color:#bbb; font-size:11px; margin-top:4px; }
+
     .empty{padding:32px;border:1px dashed var(--ring);border-radius:14px;text-align:center;color:var(--muted);grid-column:1/-1}
 
-    /* 💬 Связь и оплата */
     .contact-box {
       background:#fff9e6;border:1px solid #f5e2a8;border-radius:16px;
       padding:20px 24px;margin:40px 0;box-shadow:0 4px 12px rgba(0,0,0,0.05);
@@ -72,7 +73,6 @@
     .pay-btn{background:#ffc107;color:#000;border:none;border-radius:10px;font-weight:600;padding:10px 18px;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15)}
     .pay-btn:hover{background:#ffcd39}
 
-    /* Modal */
     .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     .modal-content{background:#fff;max-width:640px;width:90%;border-radius:12px;padding:24px;box-shadow:0 6px 24px rgba(0,0,0,.2);overflow-y:auto;max-height:80vh;position:relative;animation:popIn .25s ease-out}
@@ -134,10 +134,11 @@
       </div>
     </section>
 
-    <footer>© <span id="year"></span> • Каталог лекций</footer>
+    <footer>© <span id="year"></span> • Каталог лекций
+      <div id="visits"></div>
+    </footer>
   </div>
 
-  <!-- Modal -->
   <div id="modal" class="modal">
     <div class="modal-content">
       <button class="close" onclick="closeModal()">×</button>
@@ -187,11 +188,8 @@ function render(){
   });
   $('#grid').innerHTML = filtered.map(cardHTML).join('') || `<div class="empty">Ничего не найдено</div>`;
   updateCounter();
-
-  // ✅ Прокрутка страницы вверх после фильтрации
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 
 function toggleSelect(id){ state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id); render(); }
 function updateCounter(){ const count=state.selected.size,sum=count*50;$('#count').textContent=count;$('#sum').textContent=sum; }
@@ -236,8 +234,15 @@ fetch('lectures.json',{cache:'no-store'})
   .catch(()=>{$('#grid').innerHTML='<div class="empty">Ошибка загрузки данных</div>';});
 
 $('#year').textContent=new Date().getFullYear();
-</script>
-  <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://babel-lectures.github.io" style="display:none" alt="">
 
+// ✅ Счётчик посещений
+fetch('https://api.countapi.xyz/hit/evg25/lectorium-index')
+  .then(res => res.json())
+  .then(data => {
+    console.log("Visits:", data.value);
+    $('#visits').textContent = 'Просмотров: ' + data.value;
+  })
+  .catch(()=>console.log("Visit counter error"));
+</script>
 </body>
 </html>
